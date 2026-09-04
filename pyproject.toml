@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ourbit-two-pillar-scalper"
+version = "0.1.0"
+description = "Fail-closed event-driven USDT-M perpetual futures research and execution system"
+requires-python = ">=3.11"
+dependencies = [
+  "aiohttp>=3.10,<4",
+  "PyYAML>=6.0,<7",
+  "websockets>=13,<16",
+]
+
+[project.optional-dependencies]
+storage = ["pyarrow>=17,<22"]
+training = ["accelerate>=1.0", "datasets>=3.0", "peft>=0.13", "transformers>=4.45", "trl>=0.12"]
+dev = ["mypy>=1.11", "pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.7", "types-PyYAML>=6.0"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["bot"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["bot"]
+ignore_missing_imports = true
+

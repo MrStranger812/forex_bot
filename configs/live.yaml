@@ -1,0 +1,27 @@
+mode: live
+symbols: [BTC_USDT]
+market_data:
+  stale_after_ms: 1500
+  reconnect_before_hours: 23.5
+  record_dir: recordings/live
+strategy:
+  pillar_one_min_confidence: 0.70
+  pillar_two_min_strength: 0.65
+  max_spread_bps: 4.0
+  min_depth_notional: 25000
+  min_edge_bps: 4.0
+  expected_move_scale_bps: 25.0
+  stop_distance_bps: 10.0
+risk:
+  risk_fraction: 0.0005
+  daily_loss_fraction: 0.01
+  max_drawdown_fraction: 0.03
+  leverage: 1
+  maximum_allowed_leverage: 2
+  max_consecutive_losses: 3
+execution:
+  enabled: false
+  maker_wait_ms: 250
+  aggressive_limit_bps: 1.5
+ourbit:
+  endpoint_manifest_verified: false

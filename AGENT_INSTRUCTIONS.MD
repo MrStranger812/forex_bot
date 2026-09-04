@@ -1,75 +1,73 @@
-🤖 AI Agent Context & Instructions
+# Agent Instructions — Ourbit Two-Pillar Crypto Scalper
 
-Project Name: Hybrid HFT MT4 Orchestrator
-Core Framework: NautilusTrader (Python/Rust) + MetaTrader 4 (ZMQ)
-AI Stack: Local Fine-tuned Dolphin Llama-3 (8B) via FastAPI + PEFT/LoRA
+## Mission and terminology
 
-🏗️ 1. Project Architecture Overview
+This repository implements an event-driven crypto scalper for Ourbit USDT-margined perpetual futures. Never describe it as HFT: a public API and non-colocated host cannot compete with colocated infrastructure.
 
-This is an institutional-grade, hybrid algorithmic trading system for XAU/USD (Gold). It strictly separates Machine Learning / Heavy Computation from the lightning-fast Execution Engine.
+Initial rollout order is `BTC_USDT`, followed by `ETH_USDT`. Do not broaden the live universe until BTC has passed replay, shadow, paper, and micro-live promotion gates.
 
-It is built on a Two-Pillar System:
+## Governing invariant
 
-Pillar 1 (The Brain / Macro): A local, uncensored LLM fine-tuned on historical ground-truth economic data. It runs as a standalone FastAPI server and outputs a macro directional bias (Bullish, Bearish, Neutral).
+No new trade is allowed unless a fresh Pillar 1 opinion agrees with a strong, fresh Pillar 2 signal and the independent risk gate approves it.
 
-Pillar 2 (The Trigger / Micro): A Rule-Based Regime Engine running inside NautilusTrader on a 15-minute timeframe. It uses EMA crosses for trend alignment and ATR for volatility/stop-loss calculations.
+- Pillar 1 is an independent, short-lived news opinion. It may filter, warn, veto, or abstain. It never creates orders.
+- Pillar 2 is deterministic market math and controls timing.
+- The risk engine controls permission and size.
+- The order manager controls execution and reconciliation.
+- A failed or stale Pillar 1 closes the entry gate; it does not force an exit.
 
-Execution: NautilusTrader does NOT connect directly to a standard broker API. It connects to a MetaTrader 4 (MT4) terminal using a custom ZeroMQ (ZMQ) Bridge.
+## Safety invariants
 
-🎯 2. Current Primary Objectives
+- One position per symbol; no averaging down and no martingale.
+- Every position must have a protective exit. Exits are reduce-only where supported.
+- Any unknown order result must be reconciled by client-order ID before another action.
+- Market-data uncertainty cancels working entries; unrecoverable position uncertainty triggers flattening.
+- Live execution is disabled by default and requires the explicit runtime acknowledgement described in `docs/operations.md`.
+- Never help evade exchange jurisdiction controls. Current Ourbit terms list Iran and other locations as excluded; live eligibility must be independently confirmed.
+- Never log secrets. Load them only from environment variables or an OS secret store.
+- API keys must not have withdrawal permission. Prefer IP allowlisting and minimum permissions.
+- Paper leverage is 1x. Early live validation must not exceed 2x.
+- Fees, precision, lot size, minimum notional, and margin tiers come from exchange/account metadata—not constants.
 
-Whenever assisting with this project, prioritize the following goals:
+## Exchange-contract rule
 
-Pillar Integration: Ensure seamless, non-blocking communication between the NautilusTrader strategy (bot/strategies/hybrid_regime_orchestrator.py) and the LLM API Server (scripts/llm_api_server.py). The trading thread must never be blocked by API latency.
+Ourbit's public spot V3 documentation is not proof of a futures endpoint or channel. Keep futures REST paths and WebSocket topics configurable and fail closed when they have not been verified against official documentation or a read-only account. Never guess an order endpoint in production code.
 
-MT4 ZeroMQ Bridge: Build and stabilize the connection between NautilusTrader and MT4.
+## Engineering rules
 
-Python Side: A custom NautilusTrader Execution/Data Client using pyzmq.
+- Python 3.11+; type all public interfaces.
+- Keep the trading path asynchronous and bounded. No network or model call may block the market-data loop.
+- Domain types stay free of HTTP, WebSocket, pandas, PyTorch, and exchange payload details.
+- Use `Decimal` for money, price, and quantity; never binary float at an order boundary.
+- Timestamps are timezone-aware UTC.
+- Raw exchange events are append-only and replayable.
+- Deterministic replay must not consult wall-clock time or the network.
+- News must be deduplicated before inference. Duplicate stories cannot extend a bias.
+- LLM responses are strict JSON, short-lived, validated, and allowed to abstain. Timeout or invalid output fails closed.
+- Heavy training dependencies belong in the optional `training` dependency group and never in the live runtime.
 
-MQL4 Side: An Expert Advisor (EA) running on the MT4 terminal listening on a local port (e.g., TCP 5555 or 5556) to execute trades and stream tick data.
+## Required checks
 
-📜 3. Strict Coding Directives
+Before handing off a change, run the relevant subset and normally the full suite:
 
-A. Separation of Concerns (CRITICAL)
+```text
+python -m pytest
+python -m ruff check .
+python -m mypy bot apps research training
+```
 
-Execution vs. AI: Never put heavy ML imports (PyTorch, Transformers, Pandas) inside the bot/ directory. The bot/ directory is strictly for NautilusTrader execution logic. All AI and data processing lives in scripts/.
+Add tests for signing, timestamp skew, rounding, sequence gaps, duplicates, stale events, unknown order state, partial fills, cancel/fill races, restart reconciliation, LLM validation, contradictory pillars, risk limits, and kill switches whenever those paths change.
 
-Non-Blocking Logic: NautilusTrader relies on high-speed event loops. Any external API calls (like pinging the LLM) must be handled asynchronously or with strict, minimal timeouts (e.g., timeout=2.0 max).
+## Data policy
 
-B. The ZMQ MT4 Bridge Protocol
+The legacy Forex files and generated XAU/USD JSONL are not valid inputs to the crypto system. They may remain only as quarantined historical artifacts until deliberately removed. Dataset builders accept explicit inputs, retain provenance, split chronologically, embargo boundaries, and group syndicated duplicates before splitting.
 
-When writing code for the MT4 Bridge, adhere to these patterns:
+## Source of truth
 
-Order Execution (REQ/REP): Python sends an execution string (e.g., BUY|XAUUSD|1.0). MT4 receives it, executes via OrderSend(), and replies with the TicketID or an error.
+- Product and behavior: `docs/system_spec.md`
+- Runtime/security procedures: `docs/operations.md`
+- Promotion status and remaining work: `docs/status.md`
+- Verified external-source boundary: `docs/references.md`
+- Environment-specific settings: `configs/*.yaml`
 
-Market Data (PUB/SUB): MT4 publishes live tick data. Python subscribes and ingests it into NautilusTrader's Cache.
-
-Resiliency: ZMQ connections can drop. Always include timeout handling, reconnection logic, and heartbeat pings.
-
-C. Trading Logic Rules
-
-The Matrix Check: A trade is ONLY executed if Pillar 1 (Macro Bias) and Pillar 2 (Micro Trend) perfectly align.
-
-Risk Management: Always utilize dynamic stop losses based on ATR (Average True Range) to account for current market volatility. Do not use static pip stops.
-
-📂 4. Project Structure Reference
-
-bot/adapters/: Custom ZMQ clients for MT4.
-
-bot/strategies/: Nautilus strategy files (e.g., hybrid_regime_orchestrator.py).
-
-bot/core/: Utility files (Market sessions, risk management).
-
-scripts/: LLM API servers, data labelers, EODHD scrapers.
-
-data/: Historical MT4 CSVs and LLM jsonl training data.
-
-models/: Saved LoRA adapters for the Dolphin LLM.
-
-🛠️ 5. Interaction Guidelines for the AI
-
-Do not suggest deep learning for OHLCV data. We have proven it fails. Stick to the Rule-Based engine for pricing data (Pillar 2).
-
-Keep NautilusTrader imports up-to-date (using version 0.100.0+ patterns).
-
-When writing MQL4 code for the ZMQ bridge, ensure strict syntax compatibility with standard MetaTrader 4 compilers. 
+If documentation, configuration, and code disagree, fail safely and update all three in the same change.

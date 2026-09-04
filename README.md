@@ -1,0 +1,30 @@
+# Ourbit two-pillar event-driven scalper
+
+This is a safety-first research and execution framework for Ourbit USDT-margined perpetual futures. It is not HFT. The initial instrument is `BTC_USDT`; `ETH_USDT` is staged behind validation gates.
+
+The entry invariant is simple: fresh Pillar 1 direction must match a sufficiently strong Pillar 2 direction, and a separate risk gate must approve the trade. The LLM cannot submit orders.
+
+> **Live-use warning:** Ourbit's User Agreement dated May 30, 2026 lists Iran and several other locations as excluded jurisdictions. This workspace uses the `Asia/Tehran` timezone. That does not prove residency, but live mode must remain disabled unless the account holder and deployment are eligible under current terms. Never use location masking to evade exchange restrictions.
+
+## Current capability
+
+- Strict domain, news-opinion, order, position, and instrument models
+- Deterministic Pillar 2 features and two-pillar decision gate
+- Risk limits, sizing, kill switches, and paper matching
+- Signed asynchronous REST foundation with unknown-order reconciliation semantics
+- Sequenced L2 book, reconnecting public WebSocket foundation, raw event recording
+- Deterministic replay, walk-forward split, stress scenario generation, dataset tooling
+- Live trading locked until Ourbit futures endpoints are verified and explicitly enabled
+- 130 deterministic unit, integration, replay, and chaos checks
+
+## Start
+
+```powershell
+py -3.11 -m venv .venv
+.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev,storage]"
+python -m pytest
+python -m apps.run_paper --config configs/paper.yaml
+```
+
+See `docs/system_spec.md`, `docs/operations.md`, and `docs/status.md` before connecting an account.

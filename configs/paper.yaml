@@ -1,0 +1,29 @@
+mode: paper
+symbols: [BTC_USDT]
+market_data:
+  stale_after_ms: 2000
+  reconnect_before_hours: 23.5
+  record_dir: recordings/paper
+strategy:
+  pillar_one_min_confidence: 0.65
+  pillar_two_min_strength: 0.60
+  max_spread_bps: 5.0
+  min_depth_notional: 10000
+  min_edge_bps: 3.0
+  expected_move_scale_bps: 25.0
+  stop_distance_bps: 10.0
+risk:
+  starting_equity: 10000
+  risk_fraction: 0.0005
+  daily_loss_fraction: 0.01
+  max_drawdown_fraction: 0.03
+  leverage: 1
+  max_consecutive_losses: 3
+execution:
+  enabled: true
+  maker_fee_bps: 1.0
+  taker_fee_bps: 4.0
+  maker_wait_ms: 300
+  aggressive_limit_bps: 2.0
+ourbit:
+  endpoint_manifest_verified: false

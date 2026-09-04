@@ -1,4 +1,0 @@
-nautilus_trader>=0.55.0
-pandas
-pyarrow
-python-dotenv
