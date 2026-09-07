@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from decimal import Decimal
 from enum import StrEnum
+from math import isfinite
 from typing import Any
 
 
@@ -99,12 +100,30 @@ class PillarTwoSignal:
     valid_until: datetime
     reasons: tuple[str, ...]
     score: float
+    expected_move_bps: float = 0.0
+    horizon_seconds: int = 0
+    model: str = "legacy"
+    probability: float | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "generated_at", ensure_utc(self.generated_at))
         object.__setattr__(self, "valid_until", ensure_utc(self.valid_until))
         if not 0 <= self.strength <= 1:
             raise ValueError("strength must be within [0, 1]")
+        if not isfinite(self.score):
+            raise ValueError("score must be finite")
+        if not isfinite(self.expected_move_bps) or self.expected_move_bps < 0:
+            raise ValueError("expected_move_bps must be finite and nonnegative")
+        if isinstance(self.horizon_seconds, bool) or not isinstance(self.horizon_seconds, int):
+            raise ValueError("horizon_seconds must be an integer")
+        if self.horizon_seconds < 0:
+            raise ValueError("horizon_seconds must be nonnegative")
+        if not self.model:
+            raise ValueError("model must not be empty")
+        if self.probability is not None and not 0 <= self.probability <= 1:
+            raise ValueError("probability must be within [0, 1] when calibrated")
+        if self.valid_until < self.generated_at:
+            raise ValueError("valid_until must not precede generated_at")
 
     def is_fresh(self, now: datetime) -> bool:
         now = ensure_utc(now)

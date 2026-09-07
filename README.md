@@ -15,7 +15,7 @@ The entry invariant is simple: fresh Pillar 1 direction must match a sufficientl
 - Sequenced L2 book, reconnecting public WebSocket foundation, raw event recording
 - Deterministic replay, walk-forward split, stress scenario generation, dataset tooling
 - Live trading locked until Ourbit futures endpoints are verified and explicitly enabled
-- 130 deterministic unit, integration, replay, and chaos checks
+- 251 deterministic unit, integration, replay, and chaos checks
 
 ## Start
 
@@ -28,3 +28,13 @@ python -m apps.run_paper --config configs/paper.yaml
 ```
 
 See `docs/system_spec.md`, `docs/operations.md`, and `docs/status.md` before connecting an account.
+
+## Pillar Two without the LLM
+
+The standalone research runner tests the time-based trend/range/breakout baseline
+against public BTC candle history. It reports net win rate, return on starting
+capital, profit factor, drawdown, chronological development/test results, and a
+doubled-cost scenario. It requires no credentials, LLM, or GPU.
+
+See [the backtest runbook](docs/pillar_two_backtesting.md) for reproducible commands,
+cost assumptions, and the limits of using candle data for scalping research.

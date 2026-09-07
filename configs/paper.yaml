@@ -5,6 +5,10 @@ market_data:
   reconnect_before_hours: 23.5
   record_dir: recordings/paper
 strategy:
+  time_based:
+    interval_seconds: 60
+    warmup_bars: 60
+    horizon_seconds: 300
   pillar_one_min_confidence: 0.65
   pillar_two_min_strength: 0.60
   max_spread_bps: 5.0

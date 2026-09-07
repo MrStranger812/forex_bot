@@ -1,0 +1,25 @@
+# Fixed research hypothesis, frozen before evaluating the later test period.
+# Costs are assumptions, not verified Ourbit account fees.
+symbol: BTC_USDT
+engine:
+  interval_seconds: 60
+  warmup_bars: 60
+  horizon_seconds: 300
+costs:
+  fee_bps_per_side: 5
+  spread_bps: 1
+  slippage_bps_per_side: 1
+  safety_margin_bps: 2
+backtest:
+  initial_equity: 10000
+  risk_fraction: 0.0005
+  max_notional_fraction: 1
+  stop_bps: 20
+  target_bps: 30
+  min_strength: 0.5
+  daily_loss_fraction: 0.01
+  max_drawdown_fraction: 0.03
+evaluation:
+  development_fraction: 0.7
+  embargo_seconds: 300
+  stress_cost_multiplier: 2

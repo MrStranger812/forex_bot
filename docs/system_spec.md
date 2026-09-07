@@ -17,7 +17,7 @@ No entry unless all of the following are true:
 2. Pillar 2 is fresh, directional, and above its strength threshold.
 3. Directions agree.
 4. Spread and depth pass rolling liquidity limits.
-5. Expected movement exceeds fees, slippage, and the safety margin.
+5. Expected movement exceeds fees, spread, slippage, and the safety margin.
 6. No circuit breaker or unresolved order exists.
 7. The independent risk engine approves and sizes the order.
 
@@ -34,7 +34,28 @@ Pillar 1 failure, timeout, abstention, neutrality, or staleness blocks new entri
 - Every filled entry must immediately create or confirm a protective exit.
 - Exchange fees, price/quantity increments, minimum notional, and contract multiplier are discovered metadata.
 
-## Pillar 2 baseline
+## Pillar 2 research baseline
+
+`TimeBasedPillarTwoEngine` consumes completed time bars with a full warmup, rejects
+overlapping/out-of-order bars, and resets its warmup after missing intervals. Its
+trend, range-reversion, and compression-breakout hypotheses select signals using
+interpretable historical price/volume features. The initial research configuration
+uses one-minute bars and a five-minute holding horizon. The same engine can consume
+completed trade-built bars in `PaperTradingEngine` via `time_based_config`.
+
+Signal strength is a heuristic, not a calibrated probability. `probability` remains
+unset until a separate calibration procedure has passed chronological validation.
+Expected movement is also a heuristic estimate. Candle history cannot supply L2,
+trade aggressor flow, quote freshness, or actual executable bid/ask prices; those
+features and their confirmation gates remain a later event-data milestone.
+
+The offline `research.pillar_two_backtest` deliberately isolates Pillar Two without
+news or model inference. It uses next-bar entries, assumed execution costs, protective
+stops, targets, time exits, and risk limits. Results are split chronologically with an
+embargo and a separately reported later test window. This research exception does not
+change the governing entry rule in the execution runtime.
+
+## Legacy Pillar 2 benchmark
 
 The signed score is `S = 0.30E + 0.20D + 0.15R + 0.15B + 0.20F`, where E is EMA alignment/slope, D is directional movement, R is rate of change, B is book imbalance, and F is aggressive trade-flow imbalance. Inputs are normalized only from information available at the event time. Strength is `min(1, abs(S)) * liquidity_quality * volatility_suitability`.
 

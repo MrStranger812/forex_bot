@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-09-04
+Updated: 2026-09-07
 
 ## Implemented foundation
 
@@ -12,11 +12,38 @@ Updated: 2026-09-04
 - Interpretable Pillar 2 score and two-pillar gate
 - Decimal sizing, limits, kill switch, paper exchange, and reconciliation state machine
 - Walk-forward/data-split/stress scenario utilities and baseline automated tests
-- 130 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
+- 251 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
+
+## Pillar Two research milestone
+
+- Implemented the closed-bar regime engine with trend, range-reversion, and
+  persistent breakout hypotheses, warmup, gap resets, and expiring signals.
+- Added optional shared-engine integration to `PaperTradingEngine`; `run_paper`
+  initializes it from `configs/paper.yaml`. The existing two-pillar execution gate
+  still requires news. The standalone research runner evaluates Pillar Two alone.
+- Added next-bar candle execution, explicit two-sided costs, stops/targets/time
+  exits, 1x exposure, equity-risk sizing, loss cooldowns, daily loss controls,
+  drawdown halts, chronological holdout, and doubled-cost evaluation.
+- Acquired and SHA256-verified 177,120 Binance BTCUSDT minute candles for May
+  through August 2026, with zero gaps. Original archives and provenance are local
+  under `data/research/`; they are candle proxies, not Ourbit executable quotes.
+- Reproduction commands and evidence limitations are in
+  [the research runbook](pillar_two_backtesting.md).
+
+This completes the first LLM-free candle baseline tooling. Multi-timeframe
+microstructure, probability calibration, full event replay, and the continuous
+collector/shadow/paper applications remain unfinished. The paper CLI is still an
+initialization smoke check; it is not a continuously running trading session.
 
 ## Deliberately blocked from live use
 
 Ourbit's current public material documents spot V3 thoroughly but does not expose a complete, current futures REST/WebSocket contract sufficient to safely guess live paths, topics, signing differences, or order semantics. The adapter therefore requires a verified endpoint manifest and live mode remains fail-closed.
+
+## Fine-tuning server status
+
+**Do not rent the RTX 3090 yet.** The project is not at the server-training gate. Real reproducible crypto news/quote data, dataset-quality reporting, leakage controls, a locally evaluated baseline, chat-template validation, a tiny-model training smoke test, and the remote training runbook must be completed first.
+
+Once every gate in `AGENT_INSTRUCTIONS.MD` passes, the agent must explicitly tell the user to rent the server and wait for confirmation before performing remote work.
 
 ## Next promotion work
 

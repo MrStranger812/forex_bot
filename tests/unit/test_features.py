@@ -38,6 +38,27 @@ def test_late_trade_does_not_corrupt_bar() -> None:
     assert bar.open == 101
 
 
+def test_late_trade_within_same_bucket_does_not_rewrite_close_or_volume() -> None:
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    builder = MultiIntervalBarBuilder((60,))
+    builder.update(trade(start + timedelta(seconds=10), "100"))
+    builder.update(trade(start + timedelta(seconds=30), "102"))
+    builder.update(trade(start + timedelta(seconds=20), "1"))
+    bar = builder.update(trade(start + timedelta(seconds=60), "103"))[0]
+    assert (bar.open, bar.low, bar.close, bar.volume, bar.trades) == (100, 100, 102, 2, 2)
+
+
+def test_unfinished_bar_is_not_emitted_and_missing_intervals_are_not_invented() -> None:
+    start = datetime(2026, 1, 1, tzinfo=UTC)
+    builder = MultiIntervalBarBuilder((60,))
+    assert builder.update(trade(start, "100")) == []
+    assert builder.update(trade(start + timedelta(seconds=59), "102")) == []
+    bars = builder.update(trade(start + timedelta(minutes=5), "103"))
+    assert len(bars) == 1
+    assert bars[0].end == start + timedelta(seconds=60)
+    assert bars[0].close == 102
+
+
 @pytest.mark.parametrize(
     ("bid", "ask", "expected"), [("3", "1", 0.5), ("1", "3", -0.5), ("0", "0", 0.0)]
 )

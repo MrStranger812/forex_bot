@@ -8,6 +8,7 @@ from bot.config import load_config
 from bot.domain.events import BboEvent
 from bot.domain.instruments import Instrument
 from bot.execution.paper_engine import PaperTradingEngine
+from bot.strategy.time_based import TimeBasedPillarTwoConfig
 
 
 def default_btc_instrument() -> Instrument:
@@ -50,6 +51,7 @@ def run(config_path: str) -> None:
         safety_margin_bps=Decimal(str(strategy["min_edge_bps"])),
         expected_move_scale_bps=Decimal(str(strategy["expected_move_scale_bps"])),
         stop_distance_bps=Decimal(str(strategy["stop_distance_bps"])),
+        time_based_config=TimeBasedPillarTwoConfig(**strategy.get("time_based", {})),
     )
     now = datetime.now(UTC)
     engine.exchange.update_bbo(

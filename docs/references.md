@@ -11,6 +11,11 @@ Reviewed on 2026-09-04. Re-check before every live promotion because exchange te
 
 ## Training/runtime sources
 
+- [Binance public market-data archives](https://github.com/binance/binance-public-data) —
+  official candle CSV field definitions, monthly/daily archive layout, SHA256
+  sidecars, and the January 2025 spot timestamp change to microseconds. Used only
+  for the explicitly labeled BTC candle research baseline, not Ourbit metadata.
+
 - [Transformers bitsandbytes quantization](https://huggingface.co/docs/transformers/main/quantization/bitsandbytes) — NF4 and `torch.bfloat16` four-bit configuration.
 - [TRL SFTTrainer](https://huggingface.co/docs/trl/sft_trainer) — conversational datasets and assistant-only loss requirements.
 

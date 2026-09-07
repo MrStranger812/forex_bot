@@ -66,7 +66,10 @@ class DecisionGate:
             rejected.append("spread")
         if context.depth_notional < self.min_depth:
             rejected.append("depth")
-        required_edge = context.fees_bps + context.slippage_bps + context.safety_margin_bps
+        required_edge = (
+            context.fees_bps + context.spread_bps
+            + context.slippage_bps + context.safety_margin_bps
+        )
         if context.expected_move_bps <= required_edge:
             rejected.append("insufficient_edge")
         if context.circuit_breaker_active:

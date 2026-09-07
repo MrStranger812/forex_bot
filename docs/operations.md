@@ -36,3 +36,7 @@ Ourbit's User Agreement dated May 30, 2026 lists Iran as an excluded jurisdictio
 Develop on Linux or WSL2 and deploy on a monitored Linux VPS chosen after measuring latency to Ourbit endpoints. Use NTP, process supervision, disk-space alerts, log rotation, encrypted storage, and a separate low-privilege OS user.
 
 The EODHD credential formerly committed in `scripts/eodhd_news_scraper.py` must be rotated in the EODHD dashboard. Git history may still contain it; consider a coordinated history rewrite only after rotation and after confirming repository-sharing implications.
+
+## Rented training server handoff
+
+GPU rental is a deliberate promotion step, not a background action. Finish the local dataset, baseline, schema, tiny-model smoke test, dependency lock, and training runbook first. At that point the agent will tell the user to rent the RTX 3090 and will wait for the server connection details before continuing there. Never place trading credentials or exchange secrets on the training server.

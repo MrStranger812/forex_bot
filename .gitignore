@@ -16,6 +16,7 @@ recordings/
 artifacts/
 models/
 data/processed/
+data/research/
 data/raw/ourbit/
 *.parquet
 *.parquet.tmp

@@ -78,6 +78,16 @@ def test_gate_rejects_disagreement(gate: DecisionGate) -> None:
     assert "pillar_disagreement" in gate.evaluate("BTC_USDT", p1, p2, context(now)).reasons
 
 
+def test_cost_gate_includes_spread_even_when_it_passes_liquidity_limit(gate: DecisionGate) -> None:
+    now = datetime(2026, 1, 1, tzinfo=UTC)
+    p1, p2 = opinions(now)
+    result = gate.evaluate(
+        "BTC_USDT", p1, p2, context(now, spread_bps=3, expected_move_bps=6)
+    )
+    assert "spread" not in result.reasons
+    assert "insufficient_edge" in result.reasons
+
+
 def test_stale_pillar_one_rejected(gate: DecisionGate) -> None:
     old = datetime.now(UTC) - timedelta(minutes=2)
     p1, p2 = opinions(old)

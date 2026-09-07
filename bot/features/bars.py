@@ -34,10 +34,15 @@ class _WorkingBar:
 
 class MultiIntervalBarBuilder:
     def __init__(self, intervals: tuple[int, ...] = (1, 5, 15, 60)) -> None:
-        if not intervals or any(value <= 0 for value in intervals):
-            raise ValueError("intervals must be positive")
+        if (
+            not intervals
+            or any(value <= 0 for value in intervals)
+            or len(set(intervals)) != len(intervals)
+        ):
+            raise ValueError("intervals must be positive and unique")
         self.intervals = intervals
         self._working: dict[tuple[str, int], _WorkingBar] = {}
+        self._last_trade_at: dict[str, datetime] = {}
 
     @staticmethod
     def _bucket(timestamp: datetime, seconds: int) -> datetime:
@@ -45,6 +50,17 @@ class MultiIntervalBarBuilder:
         return datetime.fromtimestamp(epoch - epoch % seconds, tz=UTC)
 
     def update(self, trade: TradeEvent) -> list[Bar]:
+        if (
+            not trade.price.is_finite()
+            or trade.price <= 0
+            or not trade.quantity.is_finite()
+            or trade.quantity < 0
+        ):
+            raise ValueError("trade price must be positive and quantity nonnegative and finite")
+        previous = self._last_trade_at.get(trade.symbol)
+        if previous is not None and trade.exchange_ts < previous:
+            return []
+        self._last_trade_at[trade.symbol] = trade.exchange_ts
         completed: list[Bar] = []
         for interval in self.intervals:
             key = (trade.symbol, interval)
