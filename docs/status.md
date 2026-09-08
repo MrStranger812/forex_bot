@@ -12,7 +12,7 @@ Updated: 2026-09-08
 - Interpretable Pillar 2 score and two-pillar gate
 - Decimal sizing, limits, kill switch, paper exchange, and reconciliation state machine
 - Walk-forward/data-split/stress scenario utilities and baseline automated tests
-- 291 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
+- 306 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
 
 ## Pillar Two research milestone
 
@@ -50,14 +50,28 @@ Both models rejected all entries and failed to beat the constant probability
 benchmark. See [outcome results](pillar_two_outcome_results.md); zero trades are
 not evidence of a profitable model.
 
-The immediate priority is a new signal hypothesis using individual trades and
-executable quotes, with measured costs/latency. Retain the outcome learner as a
-testable filter. Preserve fresh data for a model that passes development first;
-do not retune on the observed July–August baseline test.
+The [Ourbit cost study](pillar_two_ourbit_cost_results.md) compares published
+4 bp taker fees, with and without earlier execution assumptions, on spot and
+USDT-M proxies. All four studies fail selection. The USDT-M diagnostic has 30
+trades at profit factor 0.880 with fees alone, falling to 0.748 with assumed
+execution costs; it is confined to one fold and is not a validated improvement.
+
+Downloaded 125,280 USDT-M minute candles and audited 3,998,559 individual trades
+for July 20 against all 1,440 minute candles. The sample provides 17,280 measured
+five-second records; numeric ID gaps are disclosed. Commands and evidence are
+in [the data and fees report](ourbit_data_and_costs.md).
+
+The immediate priority is extending audited trades across complete folds and
+registering a trade-flow/intensity hypothesis. Executable Ourbit quotes and
+measured execution costs/latency remain missing. Preserve fresh data for a model
+that passes development first; do not retune on the observed baseline test.
 
 ## Deliberately blocked from live use
 
-Ourbit's current public material documents spot V3 thoroughly but does not expose a complete, current futures REST/WebSocket contract sufficient to safely guess live paths, topics, signing differences, or order semantics. The adapter therefore requires a verified endpoint manifest and live mode remains fail-closed.
+An official futures Postman collection has been located and pinned. It is partial
+and contains inconsistent examples; five public data probes failed at TLS.
+Payloads, WebSocket topics, signing differences, and order semantics remain
+unverified. The execution adapter still requires a verified endpoint manifest.
 
 ## Fine-tuning server status
 

@@ -523,7 +523,7 @@ def evaluate_file(input_path: Path, config_path: Path, output_dir: Path) -> dict
     raw = yaml.safe_load(config_bytes)
     if not isinstance(raw, dict):
         raise ValueError("configuration must be a mapping")
-    unknown = set(raw) - {"symbol", "engine", "costs", "backtest", "evaluation"}
+    unknown = set(raw) - {"symbol", "engine", "costs", "backtest", "evaluation", "cost_evidence"}
     if unknown:
         raise ValueError(f"unknown configuration keys: {sorted(unknown)}")
     symbol = raw.get("symbol")

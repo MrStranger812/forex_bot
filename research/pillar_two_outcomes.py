@@ -19,7 +19,7 @@ from bot.config import load_config
 from bot.domain.events import Direction, PillarTwoSignal, ensure_utc
 from bot.strategy.time_based import TimeBasedPillarTwoConfig
 from research.archived_flow import read_archived_flow
-from research.market_data import bars_quality, read_bars
+from research.market_data import bars_quality, provenance_path, read_bars
 from research.outcome_model import OutcomeModelConfig, OutcomeTree, prediction_metrics
 from research.pillar_two_backtest import (
     BacktestResult,
@@ -371,6 +371,10 @@ def evaluate(input_path: Path, config_path: Path, output_dir: Path) -> dict[str,
         "llm_used": False,
         "verdict": "ready_for_new_holdout" if passed else "no_validated_net_edge",
         "dataset": {
+            "input_provenance": (
+                json.loads(provenance_path(input_path).read_text(encoding="utf-8"))
+                if provenance_path(input_path).exists() else None
+            ),
             "archived_taker_volume": flow_provenance,
             "quality": bars_quality(bars),
             "opportunities": len(opportunities),
@@ -401,7 +405,8 @@ def evaluate(input_path: Path, config_path: Path, output_dir: Path) -> dict[str,
             "Development reuse: this model follows earlier experiments on these periods.",
             "Counterfactual labels overlap; their count is not an independent trade sample size.",
             "Label splits purge both actual exits and full possible holding horizons.",
-            "Features use completed candles, with no executable quotes or microstructure.",
+            "Features use completed candles and optional measured taker volume; no quotes.",
+            "Published fees may differ by account/region; execution costs remain assumptions.",
             "Leaf probabilities and returns are empirical estimates with uncertain accuracy.",
             "Probabilities target a base-cost net win; stress gating uses stress net expectancy.",
             "Thresholds are chosen on the later selection segment, before validation starts.",

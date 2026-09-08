@@ -1,0 +1,37 @@
+# Research scenario: published Ourbit futures taker fee, both entry and exit.
+# Evidence and account/regional limits: docs/ourbit_data_and_costs.md.
+# Fee-only diagnostic: spread/slippage/funding are excluded, not measured as zero.
+symbol: BTC_USDT
+cost_evidence:
+  source: https://www.ourbit.com/support/articles/17827791510072
+  published_on: '2024-09-03'
+  reviewed_on: '2026-09-08'
+  market: Ourbit USDT-M futures
+  published_maker_bps: 2
+  published_taker_bps: 4
+  account_fee_verified: false
+  regional_exception: https://www.ourbit.com/support/articles/17827791511088
+  execution_assumption: taker on entry and exit; no maker fills assumed
+  omitted_costs: [spread, slippage, funding, latency, depth_impact]
+engine:
+  interval_seconds: 60
+  warmup_bars: 60
+  horizon_seconds: 300
+costs:
+  fee_bps_per_side: 4
+  spread_bps: 0
+  slippage_bps_per_side: 0
+  safety_margin_bps: 2
+backtest:
+  initial_equity: 10000
+  risk_fraction: 0.0005
+  max_notional_fraction: 1
+  stop_bps: 20
+  target_bps: 30
+  min_strength: 0.5
+  daily_loss_fraction: 0.01
+  max_drawdown_fraction: 0.03
+evaluation:
+  development_fraction: 0.7
+  embargo_seconds: 300
+  stress_cost_multiplier: 2

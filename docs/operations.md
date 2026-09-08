@@ -9,6 +9,12 @@
 
 Never give a collector or shadow key trade or withdrawal permission. Live keys must not have withdrawal permission.
 
+The isolated `research.ourbit_public_probe` needs no key and makes one bounded
+pass over five public paths from a pinned official futures collection. It saves
+transport failures and raw responses without verifying the execution adapter.
+Use a new output directory for each pass. Futures archive acquisition and fee
+research commands are in [the data runbook](ourbit_data_and_costs.md).
+
 ## Live interlock
 
 `run_live` refuses to start unless all of these hold:

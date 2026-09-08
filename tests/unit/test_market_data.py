@@ -294,3 +294,71 @@ def test_bad_download_checksum_never_writes_output(
         download_bars(start=start, end=end, output=output)
     assert not output.exists()
     assert not provenance_path(output).exists()
+
+
+def test_futures_archive_header_units_and_source(tmp_path: Path) -> None:
+    archive = archive_plan(date(2026, 5, 1), date(2026, 5, 2), market="um")[0]
+    assert "/futures/um/" in archive.url
+    assert archive.timestamp_units == 1000
+    payload = archive_payload(
+        archive, [",".join(market_data.KLINE_HEADER), csv_row(archive.start, 1000)]
+    )
+    bars = parse_archive(payload, archive)
+    assert bars == [candle(archive.start)]
+    path = tmp_path / "futures.jsonl"
+    write_records(path, bar_record(bars[0], source=market_data.FUTURES_SOURCE))
+    assert read_bars(path) == bars
+    with pytest.raises(ValueError, match="close timestamp or units"):
+        parse_archive(archive_payload(archive, [csv_row(archive.start, 1000000)]), archive)
+
+
+def test_futures_flow_uses_actual_archive_values() -> None:
+    from research.archived_flow import parse_taker_volume
+
+    archive = archive_plan(date(2026, 5, 1), date(2026, 5, 2), market="um")[0]
+    payload = archive_payload(
+        archive, [",".join(market_data.KLINE_HEADER), csv_row(archive.start, 1000)]
+    )
+    bar = candle(archive.start)
+    values = parse_taker_volume(payload, archive.filename, "ms", {bar.start: bar}, futures=True)
+    assert values == {bar.end: Decimal(1)}
+
+
+def test_mixed_spot_futures_data_and_wrong_manifest_source_fail(tmp_path: Path) -> None:
+    path = tmp_path / "mixed.jsonl"
+    first = candle()
+    second = candle(first.end)
+    write_records(
+        path, bar_record(first), bar_record(second, source=market_data.FUTURES_SOURCE)
+    )
+    with pytest.raises(ValueError, match="mixed candle source"):
+        read_bars(path)
+    write_records(path, bar_record(first))
+    provenance_path(path).write_text(json.dumps({
+        "normalized_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "source": market_data.FUTURES_SOURCE,
+    }))
+    with pytest.raises(ValueError, match="source differs"):
+        read_bars(path)
+
+
+def test_futures_download_has_distinct_provenance_and_cache(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    start, end = date(2026, 5, 1), date(2026, 5, 2)
+    archive = archive_plan(start, end, market="um")[0]
+    payload = archive_payload(
+        archive, [",".join(market_data.KLINE_HEADER), csv_row(archive.start, 1000)]
+    )
+    digest = hashlib.sha256(payload).hexdigest()
+
+    def fetch(url: str, maximum_bytes: int) -> bytes:
+        assert "/futures/um/" in url
+        return f"{digest}  {archive.filename}".encode() if url.endswith(".CHECKSUM") else payload
+
+    monkeypatch.setattr(market_data, "_download", fetch)
+    path = tmp_path / "futures.jsonl"
+    report = download_bars(start=start, end=end, output=path, market="um")
+    assert report["source"] == market_data.FUTURES_SOURCE
+    assert read_bars(path) == [candle(archive.start)]
+    assert (tmp_path / "raw" / market_data.FUTURES_SOURCE / archive.filename).exists()

@@ -57,6 +57,15 @@ promotion; the time-based runtime continues to emit uncalibrated signals.
 The optional outcome research flow features use recorded taker-buy volume from
 checksum-verified source candles, matched to normalized OHLCV and trade counts.
 They do not substitute for executable quotes or L2 book events.
+
+Research accepts identified Binance spot and USDT-M minute archives, with
+separate cache/provenance and timestamp conventions. Mixed-market inputs are
+rejected. The individual USDT-M trade audit creates measured five-second buckets
+and compares minute OHLCV, counts, and taker volume to independent candles.
+This sample is not integrated into the minute outcome learner. Published Ourbit
+fees are isolated research scenarios; current account fees and actual execution
+costs still require verification.
+
 Expected movement is also a heuristic estimate. Candle history cannot supply L2,
 trade aggressor flow, quote freshness, or actual executable bid/ask prices; those
 features and their confirmation gates remain a later event-data milestone.
