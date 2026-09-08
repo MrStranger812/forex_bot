@@ -15,7 +15,7 @@ The entry invariant is simple: fresh Pillar 1 direction must match a sufficientl
 - Sequenced L2 book, reconnecting public WebSocket foundation, raw event recording
 - Deterministic replay, walk-forward split, stress scenario generation, dataset tooling
 - Live trading locked until Ourbit futures endpoints are verified and explicitly enabled
-- 306 deterministic unit, integration, replay, and chaos checks
+- 315 deterministic unit, integration, replay, and chaos checks
 
 ## Start
 
@@ -51,3 +51,8 @@ The [Ourbit fee validation](docs/pillar_two_ourbit_cost_results.md) repeats the
 study with published fees on spot and USDT-M data. It still fails selection.
 [Data acquisition and fees](docs/ourbit_data_and_costs.md) cover new futures
 candles, audited individual trades, and unresolved Ourbit public-feed access.
+
+The [signal design study](docs/pillar_two_signal_research.md) tests seven families,
+regime routing, consensus, and selection from earlier data. All 19 fixed candidates
+fail qualification across 13 folds. Failed-breakout reversal improves the observed
+win rate, but still loses after modeled costs; no design is promoted.

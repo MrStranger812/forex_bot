@@ -66,9 +66,23 @@ This sample is not integrated into the minute outcome learner. Published Ourbit
 fees are isolated research scenarios; current account fees and actual execution
 costs still require verification.
 
-Expected movement is also a heuristic estimate. Candle history cannot supply L2,
-trade aggressor flow, quote freshness, or actual executable bid/ask prices; those
-features and their confirmation gates remain a later event-data milestone.
+The isolated `research.signal_design_study` compares activity/flow momentum,
+failed-pressure and failed-breakout reversals, a candle VWAP proxy, and futures/spot
+basis reversion. Fixed regime routing and consensus preserve specialist movement
+budgets; nested momentum ablations do not count as independent consensus votes.
+Signals consume completed, exactly synchronized observations and enter at the
+next open. Selection uses earlier training windows under base and stressed costs,
+with cash as the fallback. All candidates and source/input/configuration hashes
+are recorded before evaluation. These rules have no LLM or exchange dependency
+and do not replace the runtime signal engine. See
+[the registered design runbook](pillar_two_signal_research.md).
+
+Expected movement is also a heuristic volatility budget, not a calibrated return
+forecast. Archives with taker-buy volume supply aggregate trade-flow features;
+candle history cannot supply L2 events, quote freshness, or actual executable
+bid/ask prices. Those features and their confirmation gates remain a later
+event-data milestone. Basis convergence is not booked as profit: only simulated
+futures-leg fills determine the unhedged basis candidate's PnL.
 
 The offline `research.pillar_two_backtest` deliberately isolates Pillar Two without
 news or model inference. It uses next-bar entries, assumed execution costs, protective

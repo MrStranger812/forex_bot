@@ -12,7 +12,7 @@ Updated: 2026-09-08
 - Interpretable Pillar 2 score and two-pillar gate
 - Decimal sizing, limits, kill switch, paper exchange, and reconciliation state machine
 - Walk-forward/data-split/stress scenario utilities and baseline automated tests
-- 306 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
+- 315 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
 
 ## Pillar Two research milestone
 
@@ -61,10 +61,21 @@ for July 20 against all 1,440 minute candles. The sample provides 17,280 measure
 five-second records; numeric ID gaps are disclosed. Commands and evidence are
 in [the data and fees report](ourbit_data_and_costs.md).
 
+The [signal design study](pillar_two_signal_research.md) adds seven deterministic
+families, fixed regime routing, consensus, and selection using earlier data. Nineteen
+fixed candidates were evaluated over 13 folds under fees-only, base, and doubled
+costs. Every active candidate loses in every scenario; the selector holds cash in
+all folds. Failed-breakout reversal at 60 minutes has 192 trades, 39.58% net win
+rate, and base profit factor 0.611. Its mean fold return is -0.0678%, with an
+average trade return of -0.0835% of entry notional. Basis candidates make no trades.
+These are exploratory comparisons on reused development dates, not a fresh test.
+
 The immediate priority is extending audited trades across complete folds and
-registering a trade-flow/intensity hypothesis. Executable Ourbit quotes and
-measured execution costs/latency remain missing. Preserve fresh data for a model
-that passes development first; do not retune on the observed baseline test.
+obtaining synchronized executable quotes with exchange/receive timestamps. Use
+that evidence to test whether failed breakouts coincide with measurable depth
+replenishment, flow decay, or a reference-market move. Current Ourbit account fees
+and measured execution costs/latency remain missing. Preserve fresh data for a
+model that passes development first; do not retune on the observed baseline test.
 
 ## Deliberately blocked from live use
 

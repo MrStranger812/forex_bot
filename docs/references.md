@@ -27,6 +27,33 @@ Reviewed on 2026-09-08. Re-check before every live promotion because exchange te
 - [Transformers bitsandbytes quantization](https://huggingface.co/docs/transformers/main/quantization/bitsandbytes) — NF4 and `torch.bfloat16` four-bit configuration.
 - [TRL SFTTrainer](https://huggingface.co/docs/trl/sft_trainer) — conversational datasets and assistant-only loss requirements.
 
+## Signal research sources
+
+- [The Price Impact of Order Book Events](https://arxiv.org/abs/1011.6402),
+  Cont, Kukanov, and Stoikov, 2014 journal / 2011 author revision. Equity
+  contemporaneous impact evidence; candle trade flow is not full book OFI.
+- [Fragmentation, Price Formation, and Cross-Impact in Bitcoin Markets](https://www.stats.ox.ac.uk/~cucuring/fragmentation_bitcoin_markets_arXiv.pdf),
+  Albers and colleagues, 2021 author manuscript. Sections 3.1.2, 3.1.4, and 5.1
+  motivate magnitude/basis features and document negative default-fee baseline
+  PnL. Subsecond forecasts do not establish minute-bar profitability.
+- [Bitcoin intraday time series momentum](https://onlinelibrary.wiley.com/doi/abs/10.1111/fire.12290),
+  Shen, Urquhart, and Wang, 2022 journal / 2021 online. Publisher abstract supports
+  volume-conditioned session momentum; the project's rolling rule is not a replication.
+- [Market impact and efficiency in cryptoassets markets](https://link.springer.com/article/10.1007/s42521-023-00095-9),
+  Barucci and colleagues, 2023. Full text distinguishes contemporaneous impact
+  from lagged prediction, including weak forward explanatory power for crypto pairs.
+- [Technical trading and cryptocurrencies](https://link.springer.com/article/10.1007/s10479-019-03357-1),
+  Hudson and Urquhart, 2021 journal / 2019 online. Section 6.5 reports failed
+  out-of-sample Bitcoin channel-breakout performance after in-sample selection.
+- [A Reality Check for Data Snooping](https://doi.org/10.1111/1468-0262.00152),
+  White, 2000, and [The probability of backtest overfitting](https://escholarship.org/uc/item/4w1110bb),
+  Bailey and colleagues, 2017. Primary abstracts support accounting for strategy
+  search. The project's descriptive fold bootstrap is neither exact Reality Check
+  nor PBO, and cannot correct prior research on these dates.
+
+Reviewed 2026-09-08. See [signal research and results](pillar_two_signal_research.md)
+for implemented hypotheses and the boundary between source evidence and inference.
+
 ## Deliberate non-assumption
 
 An official futures Postman collection was located, but a complete current

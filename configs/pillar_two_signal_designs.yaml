@@ -1,0 +1,45 @@
+# Registered research hypotheses. Freeze this file before inspecting study PnL.
+# Sources and limits are documented in docs/pillar_two_signal_research.md.
+baseline_config: configs/pillar_two_ourbit_costs.yaml
+development_end: '2026-07-26T02:23:00+00:00'
+training_days: 21
+validation_days: 5
+embargo_seconds: 3600
+decision_stride_seconds: 300
+families:
+  - activity_momentum
+  - relative_flow_momentum
+  - absolute_flow_momentum
+  - failed_pressure
+  - failed_breakout
+  - vwap_reversion
+  - basis_reversion
+architectures: [regime_router, consensus]
+exits:
+  - {name: 30m, horizon_seconds: 1800, stop_bps: 60, target_bps: 90}
+  - {name: 60m, horizon_seconds: 3600, stop_bps: 80, target_bps: 120}
+features:
+  activity_min: 1.25
+  relative_flow_min: 0.2
+  absolute_flow_min: 0.5
+  momentum_atr_min: 1.0
+  failed_progress_atr_max: 0.25
+  rejection_close_fraction: 0.35
+  range_efficiency_max: 0.25
+  trend_efficiency_min: 0.35
+  vwap_z_min: 2.0
+  basis_z_min: 2.0
+  basis_std_floor_bps: 0.5
+  min_atr_bps: 1.0
+  max_atr_bps: 60.0
+  consensus_votes: 2
+selection:
+  min_training_trades: 30
+  min_training_profit_factor: 1.1
+  require_positive_stress: true
+  min_validation_trades: 100
+  min_positive_fold_fraction: 0.6
+bootstrap:
+  draws: 2000
+  fold_block_length: 2
+  seed: 20260908
