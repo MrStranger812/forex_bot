@@ -104,6 +104,7 @@ class PillarTwoSignal:
     horizon_seconds: int = 0
     model: str = "legacy"
     probability: float | None = None
+    expected_net_return_bps: float | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "generated_at", ensure_utc(self.generated_at))
@@ -122,6 +123,8 @@ class PillarTwoSignal:
             raise ValueError("model must not be empty")
         if self.probability is not None and not 0 <= self.probability <= 1:
             raise ValueError("probability must be within [0, 1] when calibrated")
+        if self.expected_net_return_bps is not None and not isfinite(self.expected_net_return_bps):
+            raise ValueError("expected_net_return_bps must be finite when provided")
         if self.valid_until < self.generated_at:
             raise ValueError("valid_until must not precede generated_at")
 

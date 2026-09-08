@@ -15,3 +15,9 @@ official SHA256 checksums, retains raw archives, and writes normalized one-minut
 bars plus a provenance/quality sidecar. These files are explicit price/volume proxy
 inputs for the isolated Pillar Two experiment; they are not target-venue executable
 bid/ask data and cannot be substituted for the news-labeling or promotion datasets.
+
+`research.archived_flow` can recover the recorded taker-buy volume from the saved
+official candle archives without changing the original normalized dataset. It
+reverifies each checksum and matches OHLCV/trade counts before exposing flow at
+the candle close. This measured aggregate volume is not a reconstructed L2 book
+or an executable bid/ask stream.

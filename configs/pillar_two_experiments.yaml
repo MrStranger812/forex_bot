@@ -1,0 +1,69 @@
+# Registered next hypotheses. Never search the observed July/August test.
+baseline_config: configs/pillar_two_research.yaml
+development_end: '2026-07-26T02:23:00+00:00'
+training_days: 21
+validation_days: 5
+embargo_seconds: 3600
+selection:
+  min_training_trades: 30
+  min_training_profit_factor: 1.1
+  require_positive_stress: true
+  min_validation_trades: 100
+  min_positive_fold_fraction: 0.6
+candidates:
+  - name: baseline_5m
+    horizon_seconds: 300
+    stop_bps: 20
+    target_bps: 30
+    min_strength: 0.5
+    models: [trend, mean_reversion, breakout]
+  - name: trend_breakout_5m
+    horizon_seconds: 300
+    stop_bps: 20
+    target_bps: 30
+    min_strength: 0.5
+    models: [trend, breakout]
+  - name: trend_breakout_15m
+    horizon_seconds: 900
+    stop_bps: 40
+    target_bps: 60
+    min_strength: 0.7
+    models: [trend, breakout]
+  - name: trend_breakout_30m
+    horizon_seconds: 1800
+    stop_bps: 60
+    target_bps: 90
+    min_strength: 0.7
+    models: [trend, breakout]
+  - name: trend_breakout_60m
+    horizon_seconds: 3600
+    stop_bps: 80
+    target_bps: 120
+    min_strength: 0.7
+    models: [trend, breakout]
+  - name: strict_trend_30m
+    horizon_seconds: 1800
+    stop_bps: 60
+    target_bps: 90
+    min_strength: 0.85
+    models: [trend]
+  - name: strict_trend_60m
+    horizon_seconds: 3600
+    stop_bps: 80
+    target_bps: 120
+    min_strength: 0.85
+    models: [trend]
+  - name: aligned_trend_30m
+    horizon_seconds: 1800
+    stop_bps: 60
+    target_bps: 90
+    min_strength: 0.85
+    models: [trend]
+    confirmation_interval_seconds: 300
+  - name: aligned_trend_60m
+    horizon_seconds: 3600
+    stop_bps: 80
+    target_bps: 120
+    min_strength: 0.85
+    models: [trend]
+    confirmation_interval_seconds: 300

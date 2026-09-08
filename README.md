@@ -15,7 +15,7 @@ The entry invariant is simple: fresh Pillar 1 direction must match a sufficientl
 - Sequenced L2 book, reconnecting public WebSocket foundation, raw event recording
 - Deterministic replay, walk-forward split, stress scenario generation, dataset tooling
 - Live trading locked until Ourbit futures endpoints are verified and explicitly enabled
-- 251 deterministic unit, integration, replay, and chaos checks
+- 291 deterministic unit, integration, replay, and chaos checks
 
 ## Start
 
@@ -38,3 +38,11 @@ doubled-cost scenario. It requires no credentials, LLM, or GPU.
 
 See [the backtest runbook](docs/pillar_two_backtesting.md) for reproducible commands,
 cost assumptions, and the limits of using candle data for scalping research.
+
+The [development walk-forward study](docs/pillar_two_experiment_results.md) compares
+nine variants across thirteen folds. No variant currently qualifies as profitable
+after the assumed costs; the training-based selector holds cash when evidence fails.
+
+The [net-outcome model study](docs/pillar_two_outcome_results.md) adds matured labels,
+separate calibration, and measured taker-volume features. It has not established
+a positive net edge and remains research-only.

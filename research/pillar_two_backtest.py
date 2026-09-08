@@ -354,8 +354,11 @@ def run_backtest(
                     else "stale_signal"
                     if not pending.is_fresh(bar.start)
                     else "cost_gate"
-                    if pending.expected_move_bps is None
-                    or (Decimal(str(pending.expected_move_bps)) <= costs.required_edge_bps)
+                    if (
+                        Decimal(str(pending.expected_net_return_bps)) <= costs.safety_margin_bps
+                        if pending.expected_net_return_bps is not None
+                        else Decimal(str(pending.expected_move_bps)) <= costs.required_edge_bps
+                    )
                     else None
                 )
                 if reason:

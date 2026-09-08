@@ -45,6 +45,18 @@ completed trade-built bars in `PaperTradingEngine` via `time_based_config`.
 
 Signal strength is a heuristic, not a calibrated probability. `probability` remains
 unset until a separate calibration procedure has passed chronological validation.
+
+The isolated `research.pillar_two_outcomes` study learns cost-adjusted opportunity
+outcomes using separate chronological fitting, calibration, threshold-selection,
+and validation periods. Its research signals may carry empirical `probability`
+and `expected_net_return_bps` estimates. The latter already includes modeled costs,
+so the research entry gate compares it with the safety margin. Execution still
+charges costs on actual simulated fills. These fields do not authorize paper/live
+promotion; the time-based runtime continues to emit uncalibrated signals.
+
+The optional outcome research flow features use recorded taker-buy volume from
+checksum-verified source candles, matched to normalized OHLCV and trade counts.
+They do not substitute for executable quotes or L2 book events.
 Expected movement is also a heuristic estimate. Candle history cannot supply L2,
 trade aggressor flow, quote freshness, or actual executable bid/ask prices; those
 features and their confirmation gates remain a later event-data milestone.

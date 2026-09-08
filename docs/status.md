@@ -1,6 +1,6 @@
 # Implementation status
 
-Updated: 2026-09-07
+Updated: 2026-09-08
 
 ## Implemented foundation
 
@@ -12,7 +12,7 @@ Updated: 2026-09-07
 - Interpretable Pillar 2 score and two-pillar gate
 - Decimal sizing, limits, kill switch, paper exchange, and reconciliation state machine
 - Walk-forward/data-split/stress scenario utilities and baseline automated tests
-- 251 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
+- 291 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
 
 ## Pillar Two research milestone
 
@@ -29,11 +29,31 @@ Updated: 2026-09-07
   under `data/research/`; they are candle proxies, not Ourbit executable quotes.
 - Reproduction commands and evidence limitations are in
   [the research runbook](pillar_two_backtesting.md).
+- Recorded the failed [first baseline](pillar_two_baseline_results.md), then ran
+  nine registered variants across thirteen development walk-forward folds with
+  training-only selection, a one-hour embargo, and doubled costs.
+- Added completed five-minute trend confirmation and causal cached replay to the
+  research runner. Every candidate remained negative after costs; no candidate
+  qualified and every training-selected fold held cash. Detailed
+  [experiment results](pillar_two_experiment_results.md) distinguish these
+  exploratory comparisons from evidence of a profitable strategy.
 
 This completes the first LLM-free candle baseline tooling. Multi-timeframe
 microstructure, probability calibration, full event replay, and the continuous
 collector/shadow/paper applications remain unfinished. The paper CLI is still an
 initialization smoke check; it is not a continuously running trading session.
+
+Purged net-outcome labeling, local outcome-tree fitting, separate calibration,
+threshold selection, and thirteen forward folds are now implemented. A second
+iteration added measured taker-volume features from the original verified archives.
+Both models rejected all entries and failed to beat the constant probability
+benchmark. See [outcome results](pillar_two_outcome_results.md); zero trades are
+not evidence of a profitable model.
+
+The immediate priority is a new signal hypothesis using individual trades and
+executable quotes, with measured costs/latency. Retain the outcome learner as a
+testable filter. Preserve fresh data for a model that passes development first;
+do not retune on the observed July–August baseline test.
 
 ## Deliberately blocked from live use
 

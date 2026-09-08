@@ -1,0 +1,32 @@
+# Fixed outcome-model experiment; development only, no production promotion.
+baseline_config: configs/pillar_two_research.yaml
+development_end: '2026-07-26T02:23:00+00:00'
+training_days: 21
+calibration_days: 4
+selection_days: 5
+validation_days: 5
+embargo_seconds: 3600
+opportunity_stride_seconds: 300
+candidate:
+  name: trend_breakout_60m
+  horizon_seconds: 3600
+  stop_bps: 80
+  target_bps: 120
+  min_strength: 0.7
+  models: [trend, breakout]
+model:
+  max_depth: 3
+  min_fit_leaf: 100
+  min_calibration_leaf: 40
+  shrinkage_samples: 40
+  min_fit_samples: 300
+thresholds:
+  min_net_bps: [2, 5]
+  min_probability: [0.0, 0.4, 0.5]
+selection:
+  min_trades: 10
+  min_profit_factor: 1.1
+promotion:
+  min_validation_trades: 100
+  min_positive_fold_fraction: 0.6
+use_archived_taker_volume: true
