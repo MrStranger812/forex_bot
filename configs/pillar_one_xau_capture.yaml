@@ -1,0 +1,71 @@
+mode: fundamental_capture
+research_symbol: XAU_USDT
+market:
+  venue: ourbit
+  displayed_pair: GOLD(XAU)/USDT
+  api_symbol: null
+  contract_verified: false
+  listing_at: '2026-08-24T04:20:00+00:00'
+  listing_source: https://www.ourbit.com/support/articles/17827791513443
+  executable_quotes_available: false
+  fees_verified: false
+storage_dir: data/research/pillar_one_xau
+request_timeout_seconds: 20
+max_response_bytes: 4194304
+concurrency: 3
+news_max_age_seconds: 3600
+sources:
+  - id: fed_archive
+    kind: fed_archive
+    url: https://www.federalreserve.gov/json/ne-press.json
+    topic: central_bank_archive
+    poll_seconds: 86400
+  - id: fed_monetary
+    kind: rss
+    url: https://www.federalreserve.gov/feeds/press_monetary.xml
+    topic: monetary_policy
+    poll_seconds: 300
+  - id: fed_speeches
+    kind: rss
+    url: https://www.federalreserve.gov/feeds/speeches_and_testimony.xml
+    topic: central_bank_communication
+    poll_seconds: 600
+  - id: fed_press
+    kind: rss
+    url: https://www.federalreserve.gov/feeds/press_all.xml
+    topic: policy_and_financial_stability
+    poll_seconds: 600
+  - id: bea_releases
+    kind: rss
+    url: https://apps.bea.gov/rss/rss.xml
+    topic: growth_and_inflation
+    poll_seconds: 300
+  - id: bls_cpi
+    kind: rss
+    url: https://www.bls.gov/feed/cpi.rss
+    topic: inflation
+    poll_seconds: 300
+  - id: bls_employment
+    kind: rss
+    url: https://www.bls.gov/feed/empsit.rss
+    topic: labor_market
+    poll_seconds: 300
+  - id: bls_calendar
+    kind: ical
+    url: https://www.bls.gov/schedule/news_release/bls.ics
+    topic: scheduled_macro_release
+    poll_seconds: 21600
+  - id: treasury_nominal
+    kind: treasury
+    url: https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml
+    dataset: daily_treasury_yield_curve
+    topic: nominal_yields
+    history_start_year: 2003
+    poll_seconds: 21600
+  - id: treasury_real
+    kind: treasury
+    url: https://home.treasury.gov/resource-center/data-chart-center/interest-rates/pages/xml
+    dataset: daily_treasury_real_yield_curve
+    topic: real_yields
+    history_start_year: 2003
+    poll_seconds: 21600

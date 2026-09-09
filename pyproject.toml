@@ -11,6 +11,7 @@ dependencies = [
   "aiohttp>=3.10,<4",
   "PyYAML>=6.0,<7",
   "websockets>=13,<16",
+  "tzdata>=2024.1; sys_platform == 'win32'",
 ]
 
 [project.optional-dependencies]
@@ -37,4 +38,3 @@ python_version = "3.11"
 strict = true
 packages = ["bot"]
 ignore_missing_imports = true
-
