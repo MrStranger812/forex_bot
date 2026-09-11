@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 from bot.config import load_config
+from bot.news.fundamental_enrichment import parse_fed_article, parse_forex_factory
 from bot.news.fundamental_sources import (
     ParsedBatch,
     digest,
@@ -33,6 +34,8 @@ ALLOWED_HOSTS = {
     "www.bls.gov",
     "apps.bea.gov",
     "home.treasury.gov",
+    "nfs.faireconomy.media",
+    "www.ungeneva.org",
 }
 TREASURY_DATASETS = {"daily_treasury_yield_curve", "daily_treasury_real_yield_curve"}
 
@@ -46,6 +49,7 @@ def validate_config(config: dict[str, Any]) -> None:
         ("concurrency", 1, 8),
         ("request_timeout_seconds", 1, 60),
         ("max_response_bytes", 1024, 16 * 1024 * 1024),
+        ("news_max_age_seconds", 60, 86400),
     ):
         value = config[key]
         if isinstance(value, bool) or not isinstance(value, int) or not low <= value <= high:
@@ -68,8 +72,35 @@ def validate_config(config: dict[str, Any]) -> None:
             or parts.fragment
         ):
             raise ValueError("source must be a reviewed public HTTPS URL without credentials/query")
-        if source["kind"] not in {"rss", "treasury", "ical", "fed_archive"}:
+        if source["kind"] not in {
+            "rss",
+            "treasury",
+            "ical",
+            "fed_archive",
+            "forex_factory",
+            "fed_article",
+        }:
             raise ValueError("unknown source parser")
+        source_class = source.get("source_class", "official_primary")
+        if source_class not in {"official_primary", "provider_published_export"}:
+            raise ValueError("unknown source class")
+        if source["kind"] == "forex_factory" and (
+            source["url"] != "https://nfs.faireconomy.media/ff_calendar_thisweek.json"
+            or source_class != "provider_published_export"
+            or source["poll_seconds"] < 3600
+        ):
+            raise ValueError("weekly calendar needs reviewed export, provider class and hourly cap")
+        if parts.hostname == "nfs.faireconomy.media" and source["kind"] != "forex_factory":
+            raise ValueError("calendar provider must use its reviewed parser")
+        if source["kind"] == "fed_article":
+            limit = source.get("max_articles")
+            if (
+                source["url"] != "https://www.federalreserve.gov/newsevents/pressreleases/"
+                or isinstance(limit, bool)
+                or not isinstance(limit, int)
+                or not 1 <= limit <= 100
+            ):
+                raise ValueError("article enrichment needs reviewed root and a bound of 1..100")
         poll = source["poll_seconds"]
         if isinstance(poll, bool) or not isinstance(poll, int) or not 60 <= poll <= 86400:
             raise ValueError("poll_seconds must be an integer in [60,86400]")
@@ -93,7 +124,12 @@ class Resource:
         return str(self.source["id"]) + ":" + self.url
 
 
-def resources(config: dict[str, Any], now: datetime, backfill: bool) -> list[Resource]:
+def resources(
+    config: dict[str, Any],
+    now: datetime,
+    backfill: bool,
+    captured: list[dict[str, Any]] | None = None,
+) -> list[Resource]:
     result: list[Resource] = []
     for source in config["sources"]:
         if source["kind"] == "treasury":
@@ -106,6 +142,22 @@ def resources(config: dict[str, Any], now: datetime, backfill: bool) -> list[Res
                     }
                 )
                 result.append(Resource(source, source["url"] + "?" + query, year))
+        elif source["kind"] == "fed_article":
+            links: dict[str, str] = {}
+            for row in captured or []:
+                url = row.get("canonical_url", "")
+                if row["source_id"] not in {"fed_archive", "fed_monetary", "fed_press"}:
+                    continue
+                if re.fullmatch(
+                    r"https://www\.federalreserve\.gov/newsevents/pressreleases/"
+                    r"monetary\d{8}[a-z]\d?\.htm",
+                    url,
+                ):
+                    links[url] = row.get("published_at") or row.get("publication_date", "")
+            for url in sorted(links, key=lambda link: (links[link], link), reverse=True)[
+                : source["max_articles"]
+            ]:
+                result.append(Resource(source, url, None))
         else:
             result.append(Resource(source, source["url"], None))
     return result
@@ -168,7 +220,9 @@ def fetch_resource(
         evidence["success"] = evidence["http_status"] in {200, 304}
         if not evidence["success"]:
             evidence["error"] = f"HTTP {evidence['http_status']}"
-        if evidence["http_status"] == 304 and not checkpoint:
+        if evidence["http_status"] == 304 and not (
+            checkpoint and (checkpoint.get("etag") or checkpoint.get("last_modified"))
+        ):
             evidence.update(success=False, error="304 without a prior accepted representation")
     except (OSError, ValueError) as exc:
         evidence.update(success=False, error_type=type(exc).__name__, error=str(exc))
@@ -220,6 +274,10 @@ async def capture_pass(
                         batch = parse_fed_archive(body, received)
                     elif kind == "ical":
                         batch = parse_calendar(body, received)
+                    elif kind == "forex_factory":
+                        batch = parse_forex_factory(body, received)
+                    elif kind == "fed_article":
+                        batch = parse_fed_article(body, received, resource.url)
                     else:
                         if resource.year is None:
                             raise ValueError("Treasury resource needs an explicit year")
@@ -254,7 +312,10 @@ async def capture_pass(
             )
 
     await asyncio.gather(
-        *(capture(item) for item in resources(config, datetime.now(UTC), backfill))
+        *(
+            capture(item)
+            for item in resources(config, datetime.now(UTC), backfill, list(store.records()))
+        )
     )
     return totals
 

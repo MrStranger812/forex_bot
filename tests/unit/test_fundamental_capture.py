@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import json
+import urllib.error
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-from apps.run_fundamental_collector import capture_pass, validate_config
+from apps.run_fundamental_collector import Resource, capture_pass, fetch_resource, validate_config
 from bot.config import load_config
 from bot.news.fundamental_sources import (
     ParsedBatch,
@@ -17,6 +18,7 @@ from bot.news.fundamental_sources import (
     parse_treasury,
 )
 from bot.news.fundamental_store import FundamentalStore
+from research.fundamental_capture_audit import audit, rebuild
 
 NOW = datetime(2026, 9, 8, 15, tzinfo=UTC)
 RSS = b"""<rss><channel><item><title>Fed policy update</title>
@@ -38,6 +40,7 @@ def ingest(
     return store.record_fetch(
         source,
         {
+            "source_id": source["id"],
             "url": "https://www.federalreserve.gov/feeds/press_monetary.xml",
             "received_at": now.isoformat(),
             "success": success,
@@ -77,6 +80,26 @@ def test_archive_naive_date_is_metadata_and_never_fresh_news(tmp_path: Path) -> 
     with FundamentalStore(tmp_path) as store:
         ingest(store, raw, batch=batch)
         assert store.context(NOW)["recent_news"] == []
+
+
+def test_archive_accepts_date_only_and_linked_agencies_without_inventing_time() -> None:
+    raw = json.dumps(
+        [
+            {
+                "d": "1/3/2006",
+                "t": "Agency statement",
+                "l": "",
+                "stub": "https://www.ffiec.gov/news/statement",
+                "pt": "Other Announcements",
+            },
+            {"updateDate": "Last update: September 04, 2026"},
+        ]
+    ).encode()
+    batch = parse_fed_archive(raw, NOW)
+    assert not batch.rejected and len(batch.records) == 1
+    assert batch.records[0]["publication_time_quality"] == "date_only"
+    assert batch.records[0]["published_at"] is None
+    assert batch.records[0]["canonical_url"] == "https://www.ffiec.gov/news/statement"
 
 
 @pytest.mark.parametrize("date_text", [b"", b"2026-09-08T14:00:00", b"2026-09-09T14:00:00Z"])
@@ -179,6 +202,38 @@ def test_syndication_group_and_old_story_cannot_refresh_bias(tmp_path: Path) -> 
         assert store.context(NOW + timedelta(hours=2))["recent_news"] == []
 
 
+def test_repeated_monthly_release_url_is_a_new_event(tmp_path: Path) -> None:
+    with FundamentalStore(tmp_path) as store:
+        ingest(store)
+        next_month = RSS.replace(b"Tue, 08 Sep 2026", b"Thu, 08 Oct 2026")
+        later = NOW + timedelta(days=30)
+        ingest(store, next_month, now=later)
+        assert len({row["story_group"] for row in store.records()}) == 2
+        assert len(store.context(later)["recent_news"]) == 1
+
+
+def test_repeated_archive_headlines_do_not_merge_different_releases(tmp_path: Path) -> None:
+    raw = json.dumps(
+        [
+            {
+                "d": "1/3/2006",
+                "t": "FOMC statement",
+                "l": "/releases/first.htm",
+                "pt": "Monetary Policy",
+            },
+            {
+                "d": "3/3/2006",
+                "t": "FOMC statement",
+                "l": "/releases/second.htm",
+                "pt": "Monetary Policy",
+            },
+        ]
+    ).encode()
+    with FundamentalStore(tmp_path) as store:
+        ingest(store, raw, batch=parse_fed_archive(raw, NOW))
+        assert len({row["story_group"] for row in store.records()}) == 2
+
+
 def test_asof_context_excludes_backfilled_history_and_later_cancellation(tmp_path: Path) -> None:
     with FundamentalStore(tmp_path) as store:
         batch = parse_calendar(calendar(), NOW)
@@ -258,3 +313,48 @@ def test_config_rejects_credentials_and_execution() -> None:
     config["sources"][0]["url"] = "https://user:password@www.federalreserve.gov/feeds/a.xml"
     with pytest.raises(ValueError, match="credentials"):
         validate_config(config)
+
+
+def test_offline_rebuild_preserves_availability_and_verifies_raw_hashes(tmp_path: Path) -> None:
+    original, rebuilt = tmp_path / "original", tmp_path / "rebuilt"
+    with FundamentalStore(original) as store:
+        ingest(store)
+        initial = list(store.records())
+    config = {
+        "research_symbol": "XAU_USDT",
+        "sources": [dict(SOURCE, kind="rss", poll_seconds=300)],
+    }
+    result = rebuild(config, original, rebuilt)
+    assert result["audit_passed"] and result["records"] == 1
+    with FundamentalStore(rebuilt) as store:
+        assert list(store.records()) == initial
+        assert list(store.records(NOW - timedelta(seconds=1))) == []
+        raw = next((rebuilt / "raw").rglob("*.raw"))
+        raw.write_bytes(b"corruption")
+        with pytest.raises(ValueError, match="hash mismatch"):
+            audit(store)
+    with pytest.raises(FileExistsError):
+        rebuild(config, original, rebuilt)
+
+
+@pytest.mark.parametrize(
+    "checkpoint,accepted",
+    [
+        (None, False),
+        ({"etag": None, "last_modified": None, "failures": 1}, False),
+        ({"etag": '"accepted-version"', "last_modified": None}, True),
+    ],
+)
+def test_304_requires_a_previous_accepted_http_validator(
+    monkeypatch: pytest.MonkeyPatch,
+    checkpoint: dict[str, Any] | None,
+    accepted: bool,
+) -> None:
+    class Opener:
+        def open(self, request: Any, timeout: int) -> Any:
+            raise urllib.error.HTTPError(request.full_url, 304, "Not Modified", {}, None)
+
+    monkeypatch.setattr("urllib.request.build_opener", lambda *args: Opener())
+    resource = Resource(SOURCE, "https://www.federalreserve.gov/feeds/press_monetary.xml", None)
+    evidence, body = fetch_resource(resource, 5, 1000, checkpoint)
+    assert evidence["success"] is accepted and body == b""

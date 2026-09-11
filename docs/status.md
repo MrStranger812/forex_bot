@@ -1,6 +1,21 @@
 # Implementation status
 
-Updated: 2026-09-08
+Updated: 2026-09-12
+
+## ARB/USDT observation experiment
+
+The user-requested September 12 02:36 to September 13 02:36 Tehran window now has
+a bounded public-candle observer using verified KuCoin `ARBUSDTM` metadata. The
+background worker started around 02:45:49 Tehran; elapsed signals are reconstructed
+and new observations retain actual receipt times. Initial 02:36 reconstruction:
+neutral, ranging, no confirmed reversion. This is not a next-day price forecast.
+
+All 373 tests pass, including 13 observer checks; Ruff and strict mypy pass.
+The process has restart deduplication, raw response retention, missing/stale-feed
+handling, separate forward/reconstructed outcomes, and retrospective cost stress.
+The full two-pillar strategy remains HOLD without Pillar One. No orders are sent.
+See [the runbook](arb_prediction_watch.md) and local `status.json` for current
+liveness and results. The 24-hour window is still in progress.
 
 ## Implemented foundation
 
@@ -12,7 +27,7 @@ Updated: 2026-09-08
 - Interpretable Pillar 2 score and two-pillar gate
 - Decimal sizing, limits, kill switch, paper exchange, and reconciliation state machine
 - Walk-forward/data-split/stress scenario utilities and baseline automated tests
-- 315 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
+- 343 passing unit, integration, replay, and deterministic chaos checks; Ruff and strict mypy clean
 
 ## Pillar Two research milestone
 
@@ -42,6 +57,8 @@ This completes the first LLM-free candle baseline tooling. Multi-timeframe
 microstructure, probability calibration, full event replay, and the continuous
 collector/shadow/paper applications remain unfinished. The paper CLI is still an
 initialization smoke check; it is not a continuously running trading session.
+The separate ARB observer above now supplies bounded candle signal collection;
+continuous two-pillar paper execution remains unfinished.
 
 Purged net-outcome labeling, local outcome-tree fitting, separate calibration,
 threshold selection, and thirteen forward folds are now implemented. A second
@@ -70,12 +87,51 @@ rate, and base profit factor 0.611. Its mean fold return is -0.0678%, with an
 average trade return of -0.0835% of entry notional. Basis candidates make no trades.
 These are exploratory comparisons on reused development dates, not a fresh test.
 
-The immediate priority is extending audited trades across complete folds and
+The remaining BTC research work is extending audited trades across complete folds and
 obtaining synchronized executable quotes with exchange/receive timestamps. Use
 that evidence to test whether failed breakouts coincide with measurable depth
 replenishment, flow decay, or a reference-market move. Current Ourbit account fees
 and measured execution costs/latency remain missing. Preserve fresh data for a
 model that passes development first; do not retune on the observed baseline test.
+
+## Pillar One gold capture milestone
+
+The user's research priority is now XAU-USDT fundamentals. Added a resumable,
+bounded collector for official Fed, BEA, BLS, and Treasury sources with raw response
+hashes, durable versions/sightings, failure backoff, and restart checkpoints.
+Historical dates do not override receipt time. An as-of context exposes recent
+news, upcoming scheduled events, and dated yield curves while abstaining.
+
+The audited bootstrap has 16,557 records: 82 feed summaries, 4,626 Fed archive
+headlines (including 1,071 monetary-policy entries), and 11,849 daily yield curves
+covering 2003-01-02 through 2026-09-04. The curves contain 101,085 non-missing tenor
+observations. These counts describe different data units, not independent gold
+trades or training labels. Subsequent collection may add versions. See
+[the XAU collection runbook](pillar_one_xau_capture.md).
+
+The source audit verified 55 saved response hashes and SQLite integrity. A rebuild
+from the original responses fixed date-only archive parsing and story grouping
+while preserving original receipt times. Original captures remain available.
+The 28 new tests cover time handling, missing values, revisions, monthly release
+URLs, replay, corruption detection, HTTP validators, and restart behavior.
+
+The September 9 refresh recovered Fed monetary RSS and raised the corpus to 16,574
+records. A bounded 24-hour local collection run started at 19:00 UTC; its startup
+process and heartbeat were verified. Current liveness is recorded in
+`data/research/pillar_one_xau_v1/status.json` and `collector_process.json`.
+This is ongoing capture, not a completed 24-hour stability test.
+
+BLS feeds/calendar returned HTTP 403; Fed monetary RSS initially timed out.
+On September 9, the bounded Ourbit public metadata probe again failed at TLS.
+The public Gold (XAU) listing does not verify the API symbol, executable quotes,
+multiplier, financing, or account fees. No XAUT proxy is silently substituted.
+
+Next: sustain timestamped collection; acquire full release text, licensed
+point-in-time consensus estimates and broader geopolitical/dollar data; resolve
+Ourbit XAU metadata/quotes; then create leakage-checked event labels. Compare a
+simple fundamental baseline, Pillar Two alone on gold, and the combined gate on
+the same untouched periods. Neither GPU training nor a profitable fundamental
+filter has been validated.
 
 ## Deliberately blocked from live use
 

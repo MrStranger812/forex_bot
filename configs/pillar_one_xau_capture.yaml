@@ -9,12 +9,29 @@ market:
   listing_source: https://www.ourbit.com/support/articles/17827791513443
   executable_quotes_available: false
   fees_verified: false
-storage_dir: data/research/pillar_one_xau
+storage_dir: data/research/pillar_one_xau_v1
 request_timeout_seconds: 20
 max_response_bytes: 4194304
 concurrency: 3
 news_max_age_seconds: 3600
 sources:
+  - id: ff_calendar
+    kind: forex_factory
+    source_class: provider_published_export
+    url: https://nfs.faireconomy.media/ff_calendar_thisweek.json
+    topic: macro_forecast_snapshot
+    poll_seconds: 3600
+  - id: un_geneva
+    kind: rss
+    url: https://www.ungeneva.org/en/news-media/press-items-list/rss.xml
+    topic: geopolitics_and_humanitarian_affairs
+    poll_seconds: 3600
+  - id: fed_articles
+    kind: fed_article
+    url: https://www.federalreserve.gov/newsevents/pressreleases/
+    topic: monetary_policy_full_text
+    max_articles: 25
+    poll_seconds: 86400
   - id: fed_archive
     kind: fed_archive
     url: https://www.federalreserve.gov/json/ne-press.json

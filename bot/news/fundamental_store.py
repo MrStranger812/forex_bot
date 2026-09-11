@@ -108,6 +108,25 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
             if successful:
                 for record in batch.records:
                     identity = digest({"source": source["id"], "record": record})
+                    if record["kind"] == "macro_calendar":
+                        latest = self.connection.execute(
+                            "SELECT id,payload FROM records WHERE source=? AND kind=? "
+                            "AND native_id=? ORDER BY available_at DESC,rowid DESC LIMIT 1",
+                            (source["id"], record["kind"], record["native_id"]),
+                        ).fetchone()
+                        latest_payload = json.loads(latest[1]) if latest else {}
+                        if latest and all(latest_payload.get(k) == v for k, v in record.items()):
+                            identity = latest[0]
+                        else:
+                            # A -> B -> A is a new observation of A. Global content
+                            # deduplication would silently leave B as the latest forecast.
+                            identity = digest(
+                                {
+                                    "source": source["id"],
+                                    "record": record,
+                                    "transition_received_at": received.isoformat(),
+                                }
+                            )
                     existing = self.connection.execute(
                         "SELECT id FROM records WHERE id=?", (identity,)
                     ).fetchone()
@@ -127,7 +146,7 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
                             available_at=received.isoformat(),
                             capture_mode=mode,
                             raw_sha256=evidence["raw_sha256"],
-                            source_class="official_primary",
+                            source_class=source.get("source_class", "official_primary"),
                             label_status="unlabeled",
                         )
                         self.connection.execute(
@@ -151,7 +170,7 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
             # Do not cache validators from parse failures or poison a later retry with a 304.
             etag = evidence.get("etag") if successful and not batch.rejected else None
             modified = evidence.get("last_modified") if successful and not batch.rejected else None
-            if evidence.get("http_status") == 304:
+            if successful and evidence.get("http_status") == 304:
                 etag = etag or (previous or {}).get("etag")
                 modified = modified or (previous or {}).get("last_modified")
             complete = successful and not batch.rejected and mode == "historical_backfill"
@@ -164,13 +183,28 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
         return {"inserted": inserted, "duplicates": duplicates, "rejected": len(batch.rejected)}
 
     def _story_group(self, source: str, record: dict[str, Any]) -> str:
-        row = self.connection.execute(
-            "SELECT story_group FROM records WHERE (source=? AND native_id=?) "
+        if record["kind"] not in {"news", "news_archive", "news_document"}:
+            return digest([source, record["kind"], record["native_id"]])
+        # Archive headlines alone recur across unrelated policy decisions. Only full
+        # feed content participates in syndication matching on nearby publication dates.
+        content_hash = record.get("content_hash") if record["kind"] == "news" else None
+        published = record.get("published_at") or record["publication_date"]
+        reference_date = datetime.fromisoformat(published).date()
+        rows = self.connection.execute(
+            "SELECT story_group,payload FROM records WHERE (source=? AND native_id=?) "
             "OR (canonical_url IS NOT NULL AND canonical_url=?) "
-            "OR (content_hash IS NOT NULL AND content_hash=?) ORDER BY available_at,rowid LIMIT 1",
-            (source, record["native_id"], record.get("canonical_url"), record.get("content_hash")),
-        ).fetchone()
-        return str(row[0]) if row else digest([source, record["native_id"]])
+            "OR (content_hash IS NOT NULL AND content_hash=?) ORDER BY available_at,rowid",
+            (source, record["native_id"], record.get("canonical_url"), content_hash),
+        )
+        for group, payload in rows:
+            earlier = json.loads(payload)
+            earlier_time = earlier.get("published_at") or earlier.get("publication_date")
+            if (
+                earlier_time
+                and abs((reference_date - datetime.fromisoformat(earlier_time).date()).days) <= 1
+            ):
+                return str(group)
+        return digest([source, record["native_id"], reference_date.isoformat()])
 
     def records(self, at: datetime | None = None) -> Iterator[dict[str, Any]]:
         query = "SELECT payload FROM records"
@@ -195,7 +229,9 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
                     previous is None or row["observation_date"] >= previous["observation_date"]
                 ):
                     curves[row["source_id"]] = row
-            elif row["kind"] in {"news", "calendar"}:
+            elif row["kind"] in {"news", "news_document", "calendar", "macro_calendar"}:
+                if row["kind"] == "news_document" and not row.get("published_at"):
+                    continue
                 if (
                     row["kind"] == "calendar"
                     and group in groups
@@ -209,14 +245,14 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
         news = [
             row
             for group, row in groups.items()
-            if row["kind"] == "news"
+            if row["kind"] in {"news", "news_document"}
             and 0 <= (at - first_published[group]).total_seconds() <= news_max_age_seconds
         ]
         calendar = [
             row
             for row in groups.values()
-            if row["kind"] == "calendar"
-            and row["status"] != "CANCELLED"
+            if row["kind"] in {"calendar", "macro_calendar"}
+            and row.get("status") != "CANCELLED"
             and at <= datetime.fromisoformat(row["scheduled_at"]) <= at + timedelta(days=1)
         ]
         # Daily releases can be stale; retain date/age explicitly for downstream abstention.
@@ -234,6 +270,23 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
             "abstain": True,
             "reason": "Capture context is not a validated fundamental trading opinion.",
         }
+
+    def consensus_before_release(
+        self, native_id: str, release_at: datetime
+    ) -> dict[str, Any] | None:
+        """Last observed forecast version strictly before this exact scheduled release.
+
+        Caller must reconcile event identity and actual release timing first. A
+        later removal of a forecast overrides an older numeric forecast too.
+        """
+        release_at = ensure_utc(release_at)
+        result = None
+        for row in self.records(release_at - timedelta(microseconds=1)):
+            if row["kind"] == "macro_calendar" and row["native_id"] == native_id:
+                result = row
+        if result is not None and datetime.fromisoformat(result["scheduled_at"]) == release_at:
+            return result
+        return None
 
     def report(self) -> dict[str, Any]:
         counts = self.connection.execute(
@@ -265,7 +318,7 @@ class FundamentalStore(AbstractContextManager["FundamentalStore"]):
             "live_ready": False,
             "missing": [
                 "Verified Ourbit XAU contract and executable quotes",
-                "Point-in-time consensus estimates and release-value parsing",
+                "Pre-release forecast history paired with verified first-release actuals",
                 "Broad geopolitical news and dollar/positioning/reference-gold data",
                 "Leakage-checked quote labels and chronological model validation",
             ],

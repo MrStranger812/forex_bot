@@ -25,6 +25,16 @@ two-pillar gate remains required in the paper/live execution composition. Candle
 results must identify their source venue, assumed costs, and missing executable quotes;
 they do not satisfy the Ourbit replay or live promotion gates.
 
+### Authorized gold fundamental research
+
+The user prioritized XAU-USDT research on 2026-09-08. The isolated
+`apps.run_fundamental_collector` captures official macro/news data for internal
+research symbol `XAU_USDT`. Ourbit's Gold (XAU) listing is documented, but its API
+symbol and executable contract remain unverified. XAU, XAUT, BTC, and legacy
+generated XAU/USD data must remain separate. Historical publication/observation
+dates must never replace first receipt or verified point-in-time availability.
+This collection scope does not authorize exchange orders or GPU rental.
+
 ## Safety invariants
 
 - One position per symbol; no averaging down and no martingale.

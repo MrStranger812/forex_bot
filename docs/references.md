@@ -17,6 +17,35 @@ Reviewed on 2026-09-08. Re-check before every live promotion because exchange te
 - [Spot V3 API documentation](https://ourbitdevelop.github.io/apidocs/spot_v3_en/) — documents signing, 5xx unknown execution semantics, the 24-hour WebSocket lifetime, heartbeat, subscription limits, and spot depth behavior. These details are not assumed to be the futures contract.
 - [Futures Trading Tutorial](https://www.ourbit.com/support/articles/17827791511250) — describes USDT-M perpetual futures and states Coin-M is not currently supported.
 
+## Gold and fundamental capture sources
+
+Reviewed 2026-09-08/09:
+
+- [Gold (XAU) listing](https://www.ourbit.com/support/articles/17827791513443),
+  Ourbit, 2026-08-24: displayed GOLD(XAU)/USDT launch at 04:20 UTC. Official HTML
+  retained locally. This does not establish an API symbol or full contract terms.
+- [Federal Reserve RSS directory](https://www.federalreserve.gov/feeds/feeds.htm)
+  identifies monetary-policy, press, and speech/testimony feeds. The
+  [press-release index](https://www.federalreserve.gov/newsevents/pressreleases.htm)
+  references its website script and the official
+  [historical JSON index](https://www.federalreserve.gov/json/ne-press.json).
+  Archive dates lack an explicit timezone, and some entries contain dates only.
+- [BEA RSS](https://www.bea.gov/rss) redirects to the official
+  [release feed](https://apps.bea.gov/rss/rss.xml). Capture uses the direct URL
+  and publisher summaries; no article-body completeness is claimed.
+- [BLS feed directory](https://www.bls.gov/feed/) identifies CPI and employment
+  feeds. [BLS iCalendar help](https://www.bls.gov/help/hlpiCAL.htm) identifies its
+  release calendar. Direct collection returns HTTP 403 in this environment;
+  parsed test fixtures are not a claim of successful calendar collection.
+- [Treasury XML documentation](https://home.treasury.gov/treasury-daily-interest-rate-xml-feed)
+  specifies annual nominal/real yield feeds and history availability. Years
+  2003 onward were captured for both curves. Missing yields are not zeroes;
+  newly downloaded history does not prove what was available at earlier dates.
+- [World Gold Council's gold framework](https://www.gold.org/goldhub/research/gold-outlook-2026)
+  groups drivers into expansion, risk/uncertainty, opportunity cost, and momentum.
+  This motivates the collection scope; its monthly framework is not evidence of
+  profitable intraday XAU entries.
+
 ## Training/runtime sources
 
 - [Binance public market-data archives](https://github.com/binance/binance-public-data) —
@@ -53,6 +82,16 @@ Reviewed on 2026-09-08. Re-check before every live promotion because exchange te
 
 Reviewed 2026-09-08. See [signal research and results](pillar_two_signal_research.md)
 for implemented hypotheses and the boundary between source evidence and inference.
+
+## ARB public reference candles
+
+Reviewed 2026-09-12: [KuCoin futures candles](https://www.kucoin.com/docs-new/rest/futures-trading/market-data/get-klines)
+and [contract metadata](https://www.kucoin.com/docs-new/rest/futures-trading/market-data/get-symbol).
+Public responses verified `ARBUSDTM` as an open ARB/USDT-settled perpetual and the
+minute candle schema used by the isolated observer. Raw probe evidence is saved in
+`data/research/arb_feed_probe_20260912/`; ongoing responses and receipt times are in
+the observation database. No signing, order semantics, or executable Ourbit prices
+are inferred from this evidence. See [the ARB runbook](arb_prediction_watch.md).
 
 ## Deliberate non-assumption
 

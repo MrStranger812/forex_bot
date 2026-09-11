@@ -15,6 +15,22 @@ transport failures and raw responses without verifying the execution adapter.
 Use a new output directory for each pass. Futures archive acquisition and fee
 research commands are in [the data runbook](ourbit_data_and_costs.md).
 
+## ARB prediction observation
+
+For the bounded ARB/USDT public-candle observation process, see
+[the ARB runbook](arb_prediction_watch.md). It has a single-writer lock, durable
+restart, freshness/coverage reporting, a STOP sentinel, and a fixed end time.
+It uses KuCoin reference data and does not enable Ourbit execution.
+
+## Gold fundamental capture
+
+`apps.run_fundamental_collector` is a separate public-data process with no exchange
+or LLM credentials. It supports one bounded pass or a configured duration, stores
+raw responses and versions in SQLite, and resumes from persistent checkpoints.
+Run only one collector against a capture directory. See
+[the XAU runbook](pillar_one_xau_capture.md) for start, audit, export, and stop commands.
+Polling captures receipt-time evidence; it is not a low-latency newswire.
+
 ## Live interlock
 
 `run_live` refuses to start unless all of these hold:

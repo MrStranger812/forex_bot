@@ -15,7 +15,7 @@ The entry invariant is simple: fresh Pillar 1 direction must match a sufficientl
 - Sequenced L2 book, reconnecting public WebSocket foundation, raw event recording
 - Deterministic replay, walk-forward split, stress scenario generation, dataset tooling
 - Live trading locked until Ourbit futures endpoints are verified and explicitly enabled
-- 315 deterministic unit, integration, replay, and chaos checks
+- 343 deterministic unit, integration, replay, and chaos checks
 
 ## Start
 
@@ -30,6 +30,11 @@ python -m apps.run_paper --config configs/paper.yaml
 See `docs/system_spec.md`, `docs/operations.md`, and `docs/status.md` before connecting an account.
 
 ## Pillar Two without the LLM
+
+The [ARB/USDT observation run](docs/arb_prediction_watch.md) records minute-by-minute
+Pillar Two signals for September 12-13, 2026, using public KuCoin perpetual candles
+as an explicitly labeled reference market. It retains first-receipt times, separates
+reconstructed signals from forward observations, and sends no orders.
 
 The standalone research runner tests the time-based trend/range/breakout baseline
 against public BTC candle history. It reports net win rate, return on starting
@@ -56,3 +61,14 @@ The [signal design study](docs/pillar_two_signal_research.md) tests seven famili
 regime routing, consensus, and selection from earlier data. All 19 fixed candidates
 fail qualification across 13 folds. Failed-breakout reversal improves the observed
 win rate, but still loses after modeled costs; no design is promoted.
+
+## Pillar One for gold
+
+The [XAU fundamental capture runbook](docs/pillar_one_xau_capture.md) covers the
+new research focus: Fed communications, economic releases, scheduled events,
+and nominal/real Treasury yields. The collector preserves raw responses,
+receipt times, revisions, and persistent deduplication without an LLM or credentials.
+
+The audited bootstrap contains 16,557 records, including 4,626 Fed archive entries
+and 11,849 daily yield curves. These are unlabeled research inputs; Ourbit XAU
+quotes and contract metadata still need verification before model validation.

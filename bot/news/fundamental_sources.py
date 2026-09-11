@@ -58,6 +58,10 @@ def digest(value: Any) -> str:
 
 
 def parse_timestamp(value: str) -> datetime:
+    # These explicit European offsets occur in UN Geneva's published RSS.
+    # Unknown abbreviations and missing zones still fail; no host-local default.
+    value = re.sub(r"\s+CEST$", " +0200", value.strip())
+    value = re.sub(r"\s+CET$", " +0100", value)
     try:
         parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
     except ValueError:
@@ -144,7 +148,9 @@ def parse_fed_archive(payload: bytes, received_at: datetime) -> ParsedBatch:
         try:
             if isinstance(item, dict) and set(item) == {"updateDate"}:
                 continue  # Publisher's feed metadata, not an article.
-            local = datetime.strptime(item["d"], "%m/%d/%Y %I:%M:%S %p")
+            date_only = " " not in item["d"].strip()
+            format_string = "%m/%d/%Y" if date_only else "%m/%d/%Y %I:%M:%S %p"
+            local = datetime.strptime(item["d"].strip(), format_string)
             if local.date() > received_at.date():
                 raise ValueError("future archive publication date")
             link = item.get("l") or item.get("stub")
@@ -168,7 +174,9 @@ def parse_fed_archive(payload: bytes, received_at: datetime) -> ParsedBatch:
                     "publication_date": local.date().isoformat(),
                     "publisher_local_time": item["d"],
                     "published_at": None,
-                    "publication_time_quality": "timezone_unspecified_in_archive",
+                    "publication_time_quality": (
+                        "date_only" if date_only else "timezone_unspecified_in_archive"
+                    ),
                     "content_hash": digest(title.lower()),
                     "language": "en",
                 }

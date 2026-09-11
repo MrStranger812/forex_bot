@@ -98,9 +98,44 @@ Weights are hypotheses. They may be fit only on training windows, then evaluated
 
 ## Pillar 1 contract
 
+Gold is the current fundamental research focus, with internal research symbol
+`XAU_USDT` isolated from BTC, XAUT, and the quarantined legacy XAU/USD corpus.
+The public Ourbit listing establishes a displayed Gold (XAU)/USDT market; exact
+API identity and execution details remain unverified.
+
+`apps.run_fundamental_collector` captures official RSS/Atom releases, the Fed
+historical headline index, BLS calendar events, and Treasury nominal/real curves.
+It stores raw response hashes, original request/receipt timestamps, immutable
+versions, source provenance, duplicate sightings, failures, and retry checkpoints.
+Calendar timezone ambiguity is rejected; date-only archive entries retain dates
+without invented release times. Missing yields remain null. Latest historical
+snapshots are explicitly distinct from original economic-data vintages.
+
+`FundamentalStore.context(at)` only reads versions received by `at`. Revisions and
+duplicates cannot renew an old story's freshness; monthly releases using the same
+URL remain distinct events. Headline-only archives are excluded from fresh news
+context. Dated yield curves expose their age. Actuals, consensus, prior values,
+and surprises remain unset until a separately verified release parser/provider
+supplies them. The context abstains and is not a `PillarOneOpinion`.
+
+The existing inference service and training builder remain separate from this
+unlabeled corpus. Gold requires its own quote labels and chronological validation;
+the prior BTC backtests do not establish gold performance. See
+[gold fundamental collection](pillar_one_xau_capture.md).
+
 News records retain source ID, canonical URL, publication/receipt times, affected symbols, headline/body/language, source reliability, and content hash. Deduplication occurs before inference and duplicate content never renews an opinion.
 
 The model returns strict JSON containing direction, confidence, strength, horizon, affected symbols, event type, and abstention. Invalid, contradictory, expired, or late output fails closed. Recommended local inference is a short-context 7B–8B four-bit instruct model, batch one, near-zero temperature, in a process separate from trading.
+
+## ARB reference-market observation
+
+The isolated `apps.run_prediction_watch` observes the September 12-13 ARB/USDT
+window using KuCoin perpetual reference candles, the existing closed-bar Pillar Two
+engine, and actual response receipt times. It distinguishes reconstructed history
+from forward observations, stores raw responses, and expires stale current signals.
+It contains no order client; the combined strategy remains HOLD without Pillar One.
+The retrospective candle report retains explicit assumed costs and risk limits.
+This observer does not expand the live universe. See [the runbook](arb_prediction_watch.md).
 
 ## Risk baseline
 
